@@ -116,4 +116,5 @@ message.channel.send({embeds:[embed]});
 });
 
 
-client.login("YOUR_BOT_TOKEN");
+client.login(process.env.TOKEN);
+
