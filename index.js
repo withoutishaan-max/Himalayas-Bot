@@ -115,4 +115,5 @@ message.channel.send({embeds:[embed]});
 
 });
 
-client.login("MTQ2NzExNDI5NjQ1MzYyNzkzNw.GXTrgn.J2MCsxHBKW3RF-jGyRrucoOjCG09l4e1T_q9Us");
+
+client.login("YOUR_BOT_TOKEN");
