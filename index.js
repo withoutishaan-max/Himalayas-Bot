@@ -1,7 +1,8 @@
 const { 
 Client, 
 GatewayIntentBits, 
-EmbedBuilder 
+EmbedBuilder,
+PermissionsBitField
 } = require('discord.js');
 
 const client = new Client({
@@ -110,7 +111,6 @@ const embed = new EmbedBuilder()
 .setTimestamp();
 
 message.channel.send({embeds:[embed]});
-
 }
 
 if(cmd === "av"){
@@ -119,7 +119,7 @@ const user = message.mentions.users.first() || message.author;
 const embed = new EmbedBuilder()
 .setTitle(`${user.username}'s Avatar`)
 .setImage(user.displayAvatarURL({size:1024}))
-.setColor("Green");
+.setColor("#FFFFFF");
 
 message.channel.send({embeds:[embed]});
 }
@@ -136,9 +136,41 @@ return message.reply("User has no banner.");
 const embed = new EmbedBuilder()
 .setTitle(`${user.username}'s Banner`)
 .setImage(fetched.bannerURL({size:1024}))
-.setColor("Gold");
+.setColor("#FFFFFF");
 
 message.channel.send({embeds:[embed]});
+}
+
+if(cmd === "hideall"){
+
+if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
+return message.reply("You need Manage Channels permission.");
+
+message.guild.channels.cache.forEach(channel => {
+
+channel.permissionOverwrites.edit(message.guild.roles.everyone, {
+ViewChannel: false
+});
+
+});
+
+message.reply("All channels have been hidden.");
+}
+
+if(cmd === "unhideall"){
+
+if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
+return message.reply("You need Manage Channels permission.");
+
+message.guild.channels.cache.forEach(channel => {
+
+channel.permissionOverwrites.edit(message.guild.roles.everyone, {
+ViewChannel: true
+});
+
+});
+
+message.reply("All channels have been unhidden.");
 }
 
 });
