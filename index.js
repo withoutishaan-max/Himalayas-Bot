@@ -17,6 +17,7 @@ const prefix = ",";
 
 const afkUsers = new Map();
 const snipes = new Map();
+const messageCount = new Map();
 
 client.once("clientReady", () => {
 console.log(`Logged in as ${client.user.tag}`);
@@ -35,6 +36,13 @@ time: new Date()
 client.on("messageCreate", async message => {
 
 if(message.author.bot) return;
+
+// message counter
+if(!messageCount.has(message.author.id)){
+messageCount.set(message.author.id,1);
+}else{
+messageCount.set(message.author.id,messageCount.get(message.author.id)+1);
+}
 
 if(afkUsers.has(message.author.id)){
 afkUsers.delete(message.author.id);
@@ -171,6 +179,48 @@ ViewChannel: true
 });
 
 message.reply("All channels have been unhidden.");
+}
+
+if(cmd === "ban"){
+
+if(!message.member.permissions.has(PermissionsBitField.Flags.BanMembers))
+return message.reply("You don't have permission to ban.");
+
+const user = message.mentions.members.first();
+
+if(!user) return message.reply("Mention a user to ban.");
+
+await user.ban();
+
+message.channel.send(`${user.user.tag} has been banned.`);
+}
+
+if(cmd === "kick"){
+
+if(!message.member.permissions.has(PermissionsBitField.Flags.KickMembers))
+return message.reply("You don't have permission to kick.");
+
+const user = message.mentions.members.first();
+
+if(!user) return message.reply("Mention a user to kick.");
+
+await user.kick();
+
+message.channel.send(`${user.user.tag} has been kicked.`);
+}
+
+if(cmd === "msgcount"){
+
+const user = message.mentions.users.first() || message.author;
+
+const count = messageCount.get(user.id) || 0;
+
+const embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("Message Counter")
+.setDescription(`${user.username} has sent **${count}** messages.`);
+
+message.channel.send({embeds:[embed]});
 }
 
 });
