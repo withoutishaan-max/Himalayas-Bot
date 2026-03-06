@@ -110,7 +110,7 @@ const embed=new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
-/* SERVER INFO (Screenshot style) */
+/* SERVER INFO */
 
 if(cmd==="si"){
 
@@ -125,7 +125,6 @@ const embed = new EmbedBuilder()
 .setDescription(`**${message.guild.name}**\nNo description set.`)
 
 .addFields(
-
 {
 name:"📜 General Info",
 value:`**Name:** ${message.guild.name}
@@ -155,7 +154,6 @@ value:`**Text:** ${textChannels}
 **Voice:** ${voiceChannels}
 **Categories:** ${categories}`
 }
-
 )
 
 .setFooter({
@@ -176,6 +174,21 @@ const embed=new EmbedBuilder()
 .setTitle(`${user.username}'s Avatar`)
 .setImage(user.displayAvatarURL({size:1024}))
 .setColor("#FFFFFF");
+
+message.channel.send({embeds:[embed]});
+}
+
+/* GENERAL */
+
+if(cmd==="ping"){
+message.reply(`🏓 Pong: ${client.ws.ping}ms`);
+}
+
+if(cmd==="servericon"){
+const embed=new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("Server Icon")
+.setImage(message.guild.iconURL({size:1024,dynamic:true}));
 
 message.channel.send({embeds:[embed]});
 }
@@ -276,6 +289,33 @@ const embed=new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
+/* MODERATION */
+
+if(cmd==="clear"){
+if(!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages))
+return;
+
+const amount=parseInt(args[0]);
+
+if(!amount) return message.reply("Usage: ,clear 10");
+
+await message.channel.bulkDelete(amount,true);
+
+message.channel.send(`Deleted ${amount} messages.`);
+}
+
+/* GAMES */
+
+if(cmd==="coinflip"){
+const result=Math.random()<0.5?"Heads":"Tails";
+message.reply(`🪙 ${result}`);
+}
+
+if(cmd==="roll"){
+const num=Math.floor(Math.random()*6)+1;
+message.reply(`🎲 You rolled ${num}`);
+}
+
 /* JOIN VC */
 
 if(cmd==="joinvc"){
@@ -301,7 +341,7 @@ connection.destroy();
 message.reply("Left VC.");
 }
 
-/* HELP (Krypton style) */
+/* HELP */
 
 if(cmd==="help"){
 
