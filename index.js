@@ -110,28 +110,59 @@ const embed=new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
-/* SERVER INFO */
+/* SERVER INFO (Screenshot style) */
 
 if(cmd==="si"){
 
-const textChannels=message.guild.channels.cache.filter(c=>c.type===0).size;
-const voiceChannels=message.guild.channels.cache.filter(c=>c.type===2).size;
-const categories=message.guild.channels.cache.filter(c=>c.type===4).size;
+const textChannels = message.guild.channels.cache.filter(c => c.type === 0).size;
+const voiceChannels = message.guild.channels.cache.filter(c => c.type === 2).size;
+const categories = message.guild.channels.cache.filter(c => c.type === 4).size;
 
-const embed=new EmbedBuilder()
+const embed = new EmbedBuilder()
 .setColor("#FFFFFF")
 .setTitle("📊 Server Information")
 .setThumbnail(message.guild.iconURL({dynamic:true}))
-.setDescription(`**${message.guild.name}**`)
+.setDescription(`**${message.guild.name}**\nNo description set.`)
 
 .addFields(
-{name:"Owner",value:`<@${message.guild.ownerId}>`},
-{name:"Members",value:`${message.guild.memberCount}`},
-{name:"Roles",value:`${message.guild.roles.cache.size}`},
-{name:"Text Channels",value:`${textChannels}`,inline:true},
-{name:"Voice Channels",value:`${voiceChannels}`,inline:true},
-{name:"Categories",value:`${categories}`,inline:true}
-);
+
+{
+name:"📜 General Info",
+value:`**Name:** ${message.guild.name}
+**Server ID:** ${message.guild.id}
+**Owner:** <@${message.guild.ownerId}>
+**Created:** <t:${Math.floor(message.guild.createdTimestamp/1000)}:F>`
+},
+
+{
+name:"👥 Members & Roles",
+value:`**Members:** ${message.guild.memberCount}
+**Roles:** ${message.guild.roles.cache.size}
+**Verification:** ${message.guild.verificationLevel}`,
+inline:true
+},
+
+{
+name:"💎 Boost Status",
+value:`**Level:** ${message.guild.premiumTier}
+**Boosts:** ${message.guild.premiumSubscriptionCount || 0}`,
+inline:true
+},
+
+{
+name:"📁 Channels",
+value:`**Text:** ${textChannels}
+**Voice:** ${voiceChannels}
+**Categories:** ${categories}`
+}
+
+)
+
+.setFooter({
+text:`Requested by ${message.author.username}`,
+iconURL:message.author.displayAvatarURL()
+})
+.setTimestamp();
 
 message.channel.send({embeds:[embed]});
 }
@@ -152,7 +183,6 @@ message.channel.send({embeds:[embed]});
 /* HIDE CURRENT */
 
 if(cmd==="hide"){
-
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
 return message.reply("Manage Channels permission required.");
 
@@ -166,7 +196,6 @@ message.reply("Channel hidden.");
 /* UNHIDE CURRENT */
 
 if(cmd==="unhide"){
-
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
 return message.reply("Manage Channels permission required.");
 
@@ -180,7 +209,6 @@ message.reply("Channel unhidden.");
 /* HIDE ALL */
 
 if(cmd==="hideall"){
-
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
 return message.reply("Manage Channels permission required.");
 
@@ -196,7 +224,6 @@ message.reply("All channels hidden.");
 /* UNHIDE ALL */
 
 if(cmd==="unhideall"){
-
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
 return message.reply("Manage Channels permission required.");
 
@@ -212,7 +239,6 @@ message.reply("All channels unhidden.");
 /* MESSAGE COUNT */
 
 if(cmd==="m"){
-
 const user=message.mentions.users.first()||message.author;
 const guildData=messageCount.get(message.guild.id);
 const count=guildData?.get(user.id)||0;
@@ -250,78 +276,9 @@ const embed=new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
-/* ADD MSG */
-
-if(cmd==="addmsg"){
-
-if(!message.member.permissions.has(PermissionsBitField.Flags.Administrator))
-return message.reply("Administrator permission required.");
-
-const amount=parseInt(args[0]);
-const user=message.mentions.users.first();
-
-if(!amount||!user) return message.reply("Usage: ,addmsg <amount> @user");
-
-const guildData=messageCount.get(message.guild.id);
-
-guildData.set(user.id,(guildData.get(user.id)||0)+amount);
-
-message.reply(`Added ${amount} messages to ${user.username}.`);
-}
-
-/* REMOVE MSG */
-
-if(cmd==="removemsg"){
-
-if(!message.member.permissions.has(PermissionsBitField.Flags.Administrator))
-return message.reply("Administrator permission required.");
-
-const amount=parseInt(args[0]);
-const user=message.mentions.users.first();
-
-if(!amount||!user) return message.reply("Usage: ,removemsg <amount> @user");
-
-const guildData=messageCount.get(message.guild.id);
-
-guildData.set(user.id,Math.max(0,(guildData.get(user.id)||0)-amount));
-
-message.reply(`Removed ${amount} messages from ${user.username}.`);
-}
-
-/* NOPREFIX GIVE */
-
-if(cmd==="noprefix"){
-
-if(message.author.id!==BOT_OWNER_ID)
-return message.reply("Only bot owner.");
-
-const user=message.mentions.users.first();
-if(!user) return message.reply("Mention user.");
-
-noPrefixUsers.add(user.id);
-
-message.reply(`${user.username} can now use commands without prefix.`);
-}
-
-/* REMOVE NOPREFIX */
-
-if(cmd==="removenoprefix"){
-
-if(message.author.id!==BOT_OWNER_ID)
-return message.reply("Only bot owner.");
-
-const user=message.mentions.users.first();
-if(!user) return message.reply("Mention user.");
-
-noPrefixUsers.delete(user.id);
-
-message.reply(`${user.username} noprefix removed.`);
-}
-
 /* JOIN VC */
 
 if(cmd==="joinvc"){
-
 const channel=message.member.voice.channel;
 if(!channel) return message.reply("Join VC first.");
 
@@ -337,7 +294,6 @@ message.reply("Joined VC.");
 /* LEAVE VC */
 
 if(cmd==="leavevc"){
-
 const connection=getVoiceConnection(message.guild.id);
 if(!connection) return message.reply("Not in VC.");
 
@@ -345,21 +301,37 @@ connection.destroy();
 message.reply("Left VC.");
 }
 
-/* HELP */
+/* HELP (Krypton style) */
 
 if(cmd==="help"){
 
 const embed=new EmbedBuilder()
 .setColor("#FFFFFF")
-.setTitle("Himalayas Bot Commands")
+.setTitle("Help Command Overview")
+.setDescription("Type `,help <command/module>` to get more info regarding it\n**20 Commands**")
 
 .addFields(
-{name:"Utility",value:"`,av` `,si`"},
-{name:"Messages",value:"`,m` `,lb`"},
-{name:"Moderation",value:"`,hide` `,unhide` `,hideall` `,unhideall`"},
-{name:"VC",value:"`,joinvc` `,leavevc`"},
-{name:"Owner",value:"`,noprefix` `,removenoprefix`"}
-);
+{
+name:"Module",
+value:`🛡️ Antinuke
+⚙️ Extra
+🌐 General
+🎉 Giveaways
+🔨 Moderation
+🎵 Music
+🚫 Ignore
+🖼️ Media
+📨 Invites
+⚡ Raidmode
+🎙️ Voice
+🎮 Games
+👋 Welcomer`
+}
+)
+
+.setFooter({
+text:"Select Module To Get Help For That Module."
+});
 
 message.channel.send({embeds:[embed]});
 }
