@@ -2,7 +2,9 @@ const {
 Client, 
 GatewayIntentBits, 
 EmbedBuilder,
-PermissionsBitField
+PermissionsBitField,
+ActionRowBuilder,
+StringSelectMenuBuilder
 } = require('discord.js');
 
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
@@ -76,16 +78,11 @@ message.reply(`${user.username} is AFK: ${afkUsers.get(user.id)}`);
 }
 });
 
-/* PREFIX + NOPREFIX */
+/* PREFIX */
 
-let isNoPrefix = noPrefixUsers.has(message.author.id);
+if(!message.content.startsWith(prefix)) return;
 
-if(!message.content.startsWith(prefix) && !isNoPrefix) return;
-
-const args = message.content.startsWith(prefix)
-? message.content.slice(prefix.length).trim().split(/ +/)
-: message.content.trim().split(/ +/);
-
+const args = message.content.slice(prefix.length).trim().split(/ +/);
 const cmd = args.shift().toLowerCase();
 
 /* AFK */
@@ -193,7 +190,7 @@ const embed=new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
-/* HIDE CURRENT */
+/* HIDE */
 
 if(cmd==="hide"){
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
@@ -206,7 +203,7 @@ ViewChannel:false
 message.reply("Channel hidden.");
 }
 
-/* UNHIDE CURRENT */
+/* UNHIDE */
 
 if(cmd==="unhide"){
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
@@ -217,36 +214,6 @@ ViewChannel:true
 });
 
 message.reply("Channel unhidden.");
-}
-
-/* HIDE ALL */
-
-if(cmd==="hideall"){
-if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
-return message.reply("Manage Channels permission required.");
-
-message.guild.channels.cache.forEach(channel=>{
-channel.permissionOverwrites.edit(message.guild.roles.everyone,{
-ViewChannel:false
-});
-});
-
-message.reply("All channels hidden.");
-}
-
-/* UNHIDE ALL */
-
-if(cmd==="unhideall"){
-if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
-return message.reply("Manage Channels permission required.");
-
-message.guild.channels.cache.forEach(channel=>{
-channel.permissionOverwrites.edit(message.guild.roles.everyone,{
-ViewChannel:true
-});
-});
-
-message.reply("All channels unhidden.");
 }
 
 /* MESSAGE COUNT */
@@ -289,91 +256,103 @@ const embed=new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
-/* MODERATION */
-
-if(cmd==="clear"){
-if(!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages))
-return;
-
-const amount=parseInt(args[0]);
-
-if(!amount) return message.reply("Usage: ,clear 10");
-
-await message.channel.bulkDelete(amount,true);
-
-message.channel.send(`Deleted ${amount} messages.`);
-}
-
-/* GAMES */
-
-if(cmd==="coinflip"){
-const result=Math.random()<0.5?"Heads":"Tails";
-message.reply(`🪙 ${result}`);
-}
-
-if(cmd==="roll"){
-const num=Math.floor(Math.random()*6)+1;
-message.reply(`🎲 You rolled ${num}`);
-}
-
-/* JOIN VC */
-
-if(cmd==="joinvc"){
-const channel=message.member.voice.channel;
-if(!channel) return message.reply("Join VC first.");
-
-joinVoiceChannel({
-channelId:channel.id,
-guildId:message.guild.id,
-adapterCreator:message.guild.voiceAdapterCreator
-});
-
-message.reply("Joined VC.");
-}
-
-/* LEAVE VC */
-
-if(cmd==="leavevc"){
-const connection=getVoiceConnection(message.guild.id);
-if(!connection) return message.reply("Not in VC.");
-
-connection.destroy();
-message.reply("Left VC.");
-}
-
-/* HELP */
+/* HELP MENU */
 
 if(cmd==="help"){
 
-const embed=new EmbedBuilder()
+const embed = new EmbedBuilder()
 .setColor("#FFFFFF")
 .setTitle("Help Command Overview")
-.setDescription("Type `,help <command/module>` to get more info regarding it\n**20 Commands**")
+.setDescription("Select a module below to view commands.")
 
-.addFields(
+const menu = new StringSelectMenuBuilder()
+.setCustomId("help_menu")
+.setPlaceholder("Select Module")
+.addOptions([
 {
-name:"Module",
-value:`🛡️ Antinuke
-⚙️ Extra
-🌐 General
-🎉 Giveaways
-🔨 Moderation
-🎵 Music
-🚫 Ignore
-🖼️ Media
-📨 Invites
-⚡ Raidmode
-🎙️ Voice
-🎮 Games
-👋 Welcomer`
+label:"General",
+value:"general",
+emoji:"🌐"
+},
+{
+label:"Moderation",
+value:"moderation",
+emoji:"🔨"
+},
+{
+label:"Games",
+value:"games",
+emoji:"🎮"
+},
+{
+label:"Voice",
+value:"voice",
+emoji:"🎙️"
 }
-)
+]);
 
-.setFooter({
-text:"Select Module To Get Help For That Module."
+const row = new ActionRowBuilder().addComponents(menu);
+
+message.channel.send({
+embeds:[embed],
+components:[row]
 });
 
-message.channel.send({embeds:[embed]});
+}
+
+});
+
+/* HELP INTERACTION */
+
+client.on("interactionCreate", async interaction => {
+
+if(!interaction.isStringSelectMenu()) return;
+
+if(interaction.customId === "help_menu"){
+
+let embed;
+
+if(interaction.values[0] === "general"){
+
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🌐 General Commands")
+.setDescription("`,ping` `,servericon` `,si` `,av`");
+
+}
+
+if(interaction.values[0] === "moderation"){
+
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🔨 Moderation Commands")
+.setDescription("`,clear` `,hide` `,unhide`");
+
+}
+
+if(interaction.values[0] === "games"){
+
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🎮 Games Commands")
+.setDescription("`,coinflip` `,roll`");
+
+}
+
+if(interaction.values[0] === "voice"){
+
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🎙 Voice Commands")
+.setDescription("`,joinvc` `,leavevc`");
+
+}
+
+interaction.reply({
+embeds:[embed],
+ephemeral:true
+});
+
 }
 
 });
