@@ -37,12 +37,24 @@ client.on("messageCreate", async message => {
 
 if(message.author.bot) return;
 
-// message counter
-if(!messageCount.has(message.author.id)){
-messageCount.set(message.author.id,1);
-}else{
-messageCount.set(message.author.id,messageCount.get(message.author.id)+1);
+/* ---------------- MESSAGE COUNTER (GUILD BASED) ---------------- */
+
+const guildId = message.guild.id;
+const userId = message.author.id;
+
+if(!messageCount.has(guildId)){
+messageCount.set(guildId,new Map());
 }
+
+const guildData = messageCount.get(guildId);
+
+if(!guildData.has(userId)){
+guildData.set(userId,1);
+}else{
+guildData.set(userId,guildData.get(userId)+1);
+}
+
+/* ---------------- AFK SYSTEM ---------------- */
 
 if(afkUsers.has(message.author.id)){
 afkUsers.delete(message.author.id);
@@ -60,13 +72,18 @@ if(!message.content.startsWith(prefix)) return;
 const args = message.content.slice(prefix.length).trim().split(/ +/);
 const cmd = args.shift().toLowerCase();
 
+/* ---------------- AFK ---------------- */
+
 if(cmd === "afk"){
 const reason = args.join(" ") || "AFK";
 afkUsers.set(message.author.id, reason);
 message.reply(`You are now AFK: ${reason}`);
 }
 
+/* ---------------- SNIPE ---------------- */
+
 if(cmd === "snipe"){
+
 const msg = snipes.get(message.channel.id);
 
 if(!msg) return message.reply("Nothing to snipe.");
@@ -80,6 +97,8 @@ const embed = new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
+/* ---------------- SERVER INFO ---------------- */
+
 if(cmd === "si"){
 
 const textChannels = message.guild.channels.cache.filter(c => c.type === 0).size;
@@ -88,40 +107,28 @@ const categories = message.guild.channels.cache.filter(c => c.type === 4).size;
 
 const embed = new EmbedBuilder()
 .setColor("#FFFFFF")
-.setTitle(`📊 Server Information`)
+.setTitle("📊 Server Information")
 .setThumbnail(message.guild.iconURL({dynamic:true}))
-.setDescription(`**${message.guild.name}**\nNo description set.`)
+.setDescription(`**${message.guild.name}**`)
 
 .addFields(
-{ name: "📜 General Info", value:
-`**Name:** ${message.guild.name}
-**Server ID:** ${message.guild.id}
-**Owner:** <@${message.guild.ownerId}>
-**Created:** <t:${Math.floor(message.guild.createdTimestamp/1000)}:F>` },
-
-{ name: "👥 Members & Roles", value:
-`**Members:** ${message.guild.memberCount}
-**Roles:** ${message.guild.roles.cache.size}
-**Verification Level:** ${message.guild.verificationLevel}`, inline:true },
-
-{ name: "💎 Boost Status", value:
-`**Level:** ${message.guild.premiumTier}
-**Boosts:** ${message.guild.premiumSubscriptionCount || 0}
-**AFK Timeout:** ${message.guild.afkTimeout} sec`, inline:true },
-
-{ name: "📁 Channels", value:
-`**Text:** ${textChannels}
-**Voice:** ${voiceChannels}
-**Categories:** ${categories}` }
+{name:"Name",value:message.guild.name},
+{name:"Owner",value:`<@${message.guild.ownerId}>`},
+{name:"Members",value:`${message.guild.memberCount}`},
+{name:"Roles",value:`${message.guild.roles.cache.size}`},
+{name:"Text Channels",value:`${textChannels}`,inline:true},
+{name:"Voice Channels",value:`${voiceChannels}`,inline:true}
 )
 
-.setFooter({ text: `Requested by ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
 .setTimestamp();
 
 message.channel.send({embeds:[embed]});
 }
 
+/* ---------------- AVATAR ---------------- */
+
 if(cmd === "av"){
+
 const user = message.mentions.users.first() || message.author;
 
 const embed = new EmbedBuilder()
@@ -132,9 +139,11 @@ const embed = new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
-if(cmd === "banner"){
-const user = message.mentions.users.first() || message.author;
+/* ---------------- BANNER ---------------- */
 
+if(cmd === "banner"){
+
+const user = message.mentions.users.first() || message.author;
 const fetched = await client.users.fetch(user.id,{force:true});
 
 if(!fetched.banner){
@@ -149,21 +158,21 @@ const embed = new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
+/* ---------------- HIDE ALL ---------------- */
+
 if(cmd === "hideall"){
 
 if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
 return message.reply("You need Manage Channels permission.");
 
 message.guild.channels.cache.forEach(channel => {
-
-channel.permissionOverwrites.edit(message.guild.roles.everyone, {
-ViewChannel: false
+channel.permissionOverwrites.edit(message.guild.roles.everyone,{ViewChannel:false});
 });
 
-});
-
-message.reply("All channels have been hidden.");
+message.reply("All channels hidden.");
 }
+
+/* ---------------- UNHIDE ALL ---------------- */
 
 if(cmd === "unhideall"){
 
@@ -171,61 +180,64 @@ if(!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels))
 return message.reply("You need Manage Channels permission.");
 
 message.guild.channels.cache.forEach(channel => {
-
-channel.permissionOverwrites.edit(message.guild.roles.everyone, {
-ViewChannel: true
+channel.permissionOverwrites.edit(message.guild.roles.everyone,{ViewChannel:true});
 });
 
-});
-
-message.reply("All channels have been unhidden.");
+message.reply("All channels unhidden.");
 }
+
+/* ---------------- BAN ---------------- */
 
 if(cmd === "ban"){
 
 if(!message.member.permissions.has(PermissionsBitField.Flags.BanMembers))
-return message.reply("You don't have permission to ban.");
+return message.reply("You don't have permission.");
 
 const user = message.mentions.members.first();
-
-if(!user) return message.reply("Mention a user to ban.");
+if(!user) return message.reply("Mention a user.");
 
 await user.ban();
-
-message.channel.send(`${user.user.tag} has been banned.`);
+message.channel.send(`${user.user.tag} banned.`);
 }
+
+/* ---------------- KICK ---------------- */
 
 if(cmd === "kick"){
 
 if(!message.member.permissions.has(PermissionsBitField.Flags.KickMembers))
-return message.reply("You don't have permission to kick.");
+return message.reply("You don't have permission.");
 
 const user = message.mentions.members.first();
-
-if(!user) return message.reply("Mention a user to kick.");
+if(!user) return message.reply("Mention a user.");
 
 await user.kick();
-
-message.channel.send(`${user.user.tag} has been kicked.`);
+message.channel.send(`${user.user.tag} kicked.`);
 }
+
+/* ---------------- MESSAGE COUNT ---------------- */
 
 if(cmd === "m"){
 
 const user = message.mentions.users.first() || message.author;
-const count = messageCount.get(user.id) || 0;
+
+const guildData = messageCount.get(message.guild.id);
+const count = guildData?.get(user.id) || 0;
 
 const embed = new EmbedBuilder()
 .setColor("#FFFFFF")
 .setTitle("Message Count")
-.setDescription(`${user.username} has sent **${count}** messages.`)
-.setThumbnail(user.displayAvatarURL());
+.setDescription(`${user.username} has sent **${count}** messages.`);
 
 message.channel.send({embeds:[embed]});
 }
 
+/* ---------------- LEADERBOARD ---------------- */
+
 if(cmd === "lb"){
 
-const sorted = [...messageCount.entries()]
+const guildData = messageCount.get(message.guild.id) || new Map();
+
+const sorted = [...guildData.entries()]
 .sort((a,b)=>b[1]-a[1])
 .slice(0,10);
 
@@ -244,18 +256,23 @@ const embed = new EmbedBuilder()
 message.channel.send({embeds:[embed]});
 }
 
+/* ---------------- HELP ---------------- */
+
 if(cmd === "help"){
 
 const embed = new EmbedBuilder()
 .setColor("#FFFFFF")
-.setTitle("Himalayas Bot Commands")
+.setTitle("Help Command Overview")
 
 .addFields(
-{name:"Utility",value:"`,av` `,banner` `,si`"},
-{name:"Messages",value:"`,m` `,lb`"},
-{name:"Moderation",value:"`,ban` `,kick` `,hideall` `,unhideall`"},
-{name:"Other",value:"`,afk` `,snipe`"}
-);
+{name:"Moderation",value:"`ban` `kick` `hideall` `unhideall`"},
+{name:"Messages",value:"`m` `lb`"},
+{name:"Utility",value:"`av` `banner` `si`"},
+{name:"Other",value:"`afk` `snipe`"}
+)
+
+.setFooter({text:`Himalayas Bot • ${message.guild.name}`})
+.setTimestamp();
 
 message.channel.send({embeds:[embed]});
 }
