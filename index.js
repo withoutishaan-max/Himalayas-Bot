@@ -78,12 +78,47 @@ message.reply(`${user.username} is AFK: ${afkUsers.get(user.id)}`);
 }
 });
 
-/* PREFIX */
+/* PREFIX + NO PREFIX */
 
-if(!message.content.startsWith(prefix)) return;
+let usedPrefix = false;
 
-const args = message.content.slice(prefix.length).trim().split(/ +/);
+if(message.content.startsWith(prefix)){
+usedPrefix = true;
+}
+
+if(!usedPrefix && !noPrefixUsers.has(message.author.id)) return;
+
+const args = usedPrefix
+? message.content.slice(prefix.length).trim().split(/ +/)
+: message.content.trim().split(/ +/);
+
 const cmd = args.shift().toLowerCase();
+
+/* NO PREFIX ADD */
+
+if(cmd==="addnp"){
+if(message.author.id !== BOT_OWNER_ID) return;
+
+const user = message.mentions.users.first();
+if(!user) return message.reply("Mention user.");
+
+noPrefixUsers.add(user.id);
+
+return message.reply(`${user.username} now has **No Prefix**.`);
+}
+
+/* NO PREFIX REMOVE */
+
+if(cmd==="removenp"){
+if(message.author.id !== BOT_OWNER_ID) return;
+
+const user = message.mentions.users.first();
+if(!user) return message.reply("Mention user.");
+
+noPrefixUsers.delete(user.id);
+
+return message.reply(`${user.username} **No Prefix removed**.`);
+}
 
 /* AFK */
 
