@@ -1,12 +1,12 @@
 {
   "name": "himalayas-bot",
   "version": "1.0.0",
-  "description": "Himalayas Discord Utility Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "discord.js": "^14.14.1",
+    "@discordjs/voice": "^0.17.0"
   }
 }
