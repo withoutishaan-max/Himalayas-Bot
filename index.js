@@ -318,26 +318,10 @@ const menu = new StringSelectMenuBuilder()
 .setCustomId("help_menu")
 .setPlaceholder("Select Module")
 .addOptions([
-{
-label:"General",
-value:"general",
-emoji:"🌐"
-},
-{
-label:"Moderation",
-value:"moderation",
-emoji:"🔨"
-},
-{
-label:"Games",
-value:"games",
-emoji:"🎮"
-},
-{
-label:"Voice",
-value:"voice",
-emoji:"🎙️"
-}
+{ label:"General", value:"general", emoji:"🌐" },
+{ label:"Moderation", value:"moderation", emoji:"🔨" },
+{ label:"Games", value:"games", emoji:"🎮" },
+{ label:"Voice", value:"voice", emoji:"🎙️" }
 ]);
 
 const row = new ActionRowBuilder().addComponents(menu);
@@ -345,6 +329,54 @@ const row = new ActionRowBuilder().addComponents(menu);
 message.channel.send({
 embeds:[embed],
 components:[row]
+});
+
+}
+
+});
+
+/* HELP MENU INTERACTION */
+
+client.on("interactionCreate", async interaction => {
+
+if(!interaction.isStringSelectMenu()) return;
+
+if(interaction.customId === "help_menu"){
+
+await interaction.deferReply({ ephemeral:true });
+
+let embed;
+
+if(interaction.values[0] === "general"){
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🌐 General Commands")
+.setDescription("`,ping` `,servericon` `,si` `,av`");
+}
+
+if(interaction.values[0] === "moderation"){
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🔨 Moderation Commands")
+.setDescription("`,hide` `,unhide`");
+}
+
+if(interaction.values[0] === "games"){
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🎮 Games Commands")
+.setDescription("`,coinflip` `,roll`");
+}
+
+if(interaction.values[0] === "voice"){
+embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("🎙 Voice Commands")
+.setDescription("`,joinvc` `,leavevc`");
+}
+
+interaction.editReply({
+embeds:[embed]
 });
 
 }
