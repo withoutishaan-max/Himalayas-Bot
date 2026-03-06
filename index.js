@@ -209,16 +209,53 @@ await user.kick();
 message.channel.send(`${user.user.tag} has been kicked.`);
 }
 
-if(cmd === "msgcount"){
+if(cmd === "m"){
 
 const user = message.mentions.users.first() || message.author;
-
 const count = messageCount.get(user.id) || 0;
 
 const embed = new EmbedBuilder()
 .setColor("#FFFFFF")
-.setTitle("Message Counter")
-.setDescription(`${user.username} has sent **${count}** messages.`);
+.setTitle("Message Count")
+.setDescription(`${user.username} has sent **${count}** messages.`)
+.setThumbnail(user.displayAvatarURL());
+
+message.channel.send({embeds:[embed]});
+}
+
+if(cmd === "lb"){
+
+const sorted = [...messageCount.entries()]
+.sort((a,b)=>b[1]-a[1])
+.slice(0,10);
+
+let leaderboard = "";
+
+sorted.forEach((data,index)=>{
+const user = client.users.cache.get(data[0]);
+leaderboard += `**${index+1}.** ${user ? user.username : "Unknown"} — ${data[1]} msgs\n`;
+});
+
+const embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("📊 Message Leaderboard")
+.setDescription(leaderboard || "No data yet.");
+
+message.channel.send({embeds:[embed]});
+}
+
+if(cmd === "help"){
+
+const embed = new EmbedBuilder()
+.setColor("#FFFFFF")
+.setTitle("Himalayas Bot Commands")
+
+.addFields(
+{name:"Utility",value:"`,av` `,banner` `,si`"},
+{name:"Messages",value:"`,m` `,lb`"},
+{name:"Moderation",value:"`,ban` `,kick` `,hideall` `,unhideall`"},
+{name:"Other",value:"`,afk` `,snipe`"}
+);
 
 message.channel.send({embeds:[embed]});
 }
