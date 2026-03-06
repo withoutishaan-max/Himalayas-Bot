@@ -97,7 +97,7 @@ const cmd = args.shift().toLowerCase();
 /* NO PREFIX ADD */
 
 if(cmd==="addnp"){
-if(message.author.id !== BOT_OWNER_ID) return;
+if(message.author.id !== 867633787529986048) return;
 
 const user = message.mentions.users.first();
 if(!user) return message.reply("Mention user.");
@@ -110,7 +110,7 @@ return message.reply(`${user.username} now has **No Prefix**.`);
 /* NO PREFIX REMOVE */
 
 if(cmd==="removenp"){
-if(message.author.id !== BOT_OWNER_ID) return;
+if(message.author.id !== 867633787529986048) return;
 
 const user = message.mentions.users.first();
 if(!user) return message.reply("Mention user.");
@@ -393,3 +393,4 @@ ephemeral:true
 });
 
 client.login(process.env.TOKEN);
+
