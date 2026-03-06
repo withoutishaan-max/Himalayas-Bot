@@ -9,6 +9,8 @@ StringSelectMenuBuilder
 
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 
+const fs = require("fs");
+
 const client = new Client({
 intents:[
 GatewayIntentBits.Guilds,
@@ -24,7 +26,14 @@ const BOT_OWNER_ID = "867633787529986048";
 const afkUsers = new Map();
 const snipes = new Map();
 const messageCount = new Map();
-const noPrefixUsers = new Set();
+
+/* LOAD NO PREFIX DATABASE */
+
+let noPrefixUsers = [];
+
+if(fs.existsSync("./noprefix.json")){
+noPrefixUsers = JSON.parse(fs.readFileSync("./noprefix.json","utf8"));
+}
 
 /* READY */
 
@@ -86,7 +95,7 @@ if(message.content.startsWith(prefix)){
 usedPrefix = true;
 }
 
-if(!usedPrefix && !noPrefixUsers.has(message.author.id)) return;
+if(!usedPrefix && !noPrefixUsers.includes(message.author.id)) return;
 
 const args = usedPrefix
 ? message.content.slice(prefix.length).trim().split(/ +/)
@@ -94,28 +103,33 @@ const args = usedPrefix
 
 const cmd = args.shift().toLowerCase();
 
-/* NO PREFIX ADD */
+/* ADD NO PREFIX */
 
 if(cmd==="addnp"){
-if(message.author.id !== 867633787529986048) return;
+if(message.author.id !== BOT_OWNER_ID) return;
 
 const user = message.mentions.users.first();
 if(!user) return message.reply("Mention user.");
 
-noPrefixUsers.add(user.id);
-
-return message.reply(`${user.username} now has **No Prefix**.`);
+if(!noPrefixUsers.includes(user.id)){
+noPrefixUsers.push(user.id);
+fs.writeFileSync("./noprefix.json", JSON.stringify(noPrefixUsers,null,2));
 }
 
-/* NO PREFIX REMOVE */
+return message.reply(`${user.username} now has **Global No Prefix**.`);
+}
+
+/* REMOVE NO PREFIX */
 
 if(cmd==="removenp"){
-if(message.author.id !== 867633787529986048) return;
+if(message.author.id !== BOT_OWNER_ID) return;
 
 const user = message.mentions.users.first();
 if(!user) return message.reply("Mention user.");
 
-noPrefixUsers.delete(user.id);
+noPrefixUsers = noPrefixUsers.filter(id => id !== user.id);
+
+fs.writeFileSync("./noprefix.json", JSON.stringify(noPrefixUsers,null,2));
 
 return message.reply(`${user.username} **No Prefix removed**.`);
 }
@@ -337,60 +351,4 @@ components:[row]
 
 });
 
-/* HELP INTERACTION */
-
-client.on("interactionCreate", async interaction => {
-
-if(!interaction.isStringSelectMenu()) return;
-
-if(interaction.customId === "help_menu"){
-
-let embed;
-
-if(interaction.values[0] === "general"){
-
-embed = new EmbedBuilder()
-.setColor("#FFFFFF")
-.setTitle("🌐 General Commands")
-.setDescription("`,ping` `,servericon` `,si` `,av`");
-
-}
-
-if(interaction.values[0] === "moderation"){
-
-embed = new EmbedBuilder()
-.setColor("#FFFFFF")
-.setTitle("🔨 Moderation Commands")
-.setDescription("`,clear` `,hide` `,unhide`");
-
-}
-
-if(interaction.values[0] === "games"){
-
-embed = new EmbedBuilder()
-.setColor("#FFFFFF")
-.setTitle("🎮 Games Commands")
-.setDescription("`,coinflip` `,roll`");
-
-}
-
-if(interaction.values[0] === "voice"){
-
-embed = new EmbedBuilder()
-.setColor("#FFFFFF")
-.setTitle("🎙 Voice Commands")
-.setDescription("`,joinvc` `,leavevc`");
-
-}
-
-interaction.reply({
-embeds:[embed],
-ephemeral:true
-});
-
-}
-
-});
-
 client.login(process.env.TOKEN);
-
